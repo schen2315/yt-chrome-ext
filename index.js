@@ -20,7 +20,10 @@ var snippet = undefined;
 /*typing timeout variable*/
 var typeTO;
 var typeTimer = 800;
-$(document).ready(pageLoadComplete);
+$(document).ready(function() {
+	
+});
+//$(document).ready(pageLoadComplete);
 function pageLoadComplete() {
 	$status = $("div.status");
 	$input = $("div.input");
