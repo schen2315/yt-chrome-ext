@@ -11,8 +11,8 @@
     "default_title": "Click here!"
   },
   "permissions": [
-    "activeTab",
-    "https://ajax.googleapis.com/",
-    "https://r11---sn-ab5l6n7d.googlevideo.com/"
+    "tabs",
+    "https://ixwyi5tpad.execute-api.us-east-1.amazonaws.com/dev/",
+    "https://*/"
   ]
 }
