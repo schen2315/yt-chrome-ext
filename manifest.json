@@ -12,7 +12,12 @@
   },
   "permissions": [
     "tabs",
+    "storage",
     "https://ixwyi5tpad.execute-api.us-east-1.amazonaws.com/dev/",
     "https://*/"
-  ]
+  ],
+  "background": {
+    "page": "background.html",
+    "persistent": true
+  }
 }
