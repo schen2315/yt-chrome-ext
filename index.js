@@ -14,10 +14,11 @@ var typeTimer = 800;
 
 var	url = "",	/* the youtube video */
 	source = "", /* where the video itself is stored */
-	dataUri = ""; /* the video */
+	dataUri = "",
+	youtube_url = ""; /* the video */
 $(document).ready(pageLoadComplete);
 function pageLoadComplete() {
-	console.log("page load complete")
+	//console.log(chrome.extension.getBackgroundPage().return_global());
 	var $status = $("div.status"),
 	$input = $("div.input"),
 	$start = $($input.find("input")[0]),
@@ -25,7 +26,24 @@ function pageLoadComplete() {
 	$rate_input =  $($input.find("input")[2]),
 	$rate_p = $($input.find("p")[2]);
 	$input.hide();
-	init();
+	// console.log(chrome.extension.getBackgroundPage().init);
+
+	chrome.tabs.query({'active': true, 'lastFocusedWindow': true}, function (tabs) {
+		youtube_url = tabs[0].url;
+		console.log(youtube_url);
+		chrome.extension.getBackgroundPage().init(youtube_url, function(data) {
+			if(data === -1) {
+				$status.find("p").text("Invalid video Url.");
+				return;
+			}
+			url = data.url;
+			source = data.source;
+			dataUri = data.dataUri;
+			youtube_url = data.youtube_url;
+			//console.log(data);
+			loadAudio();
+		});
+	});
 
 	//loadAudio();
 	//listener methods:
@@ -138,52 +156,52 @@ function pageLoadComplete() {
 		typeTO = setTimeout(setAudio, typeTimer);
 	}
 
-	function init() {
-		chrome.tabs.query({'active': true, 'lastFocusedWindow': true}, function (tabs) {
-		    url = tabs[0].url;
-		    var url_parameters = url.split('?');
-		    url = baseurl + '?';
-		    for(var i=1; i < url_parameters.length; i++) {
-		    	url += url_parameters[i];
-		    }
-		    //query my aws lambda function for the 
-		    //source url and video properties
-		    $.get(url, function(data) {
-		    	console.log(data);
-		    	if(data.message == "-1") {
-		    		//error handling
-		    		//$status.find("p").text("Invalid url.");
-		    		return;
-		    	}
-		    	var videos = data.message;
-		    	var type;
-		    	for(var i = 0; i < videos.length; i++) {
-		    		type = videos[i].container;
-		    		if(type == "webm" || type == "mp4") {
-		    			dataUri = "data:" + container[type] + ";base64,";
-		    			source = videos[i].url;
-		    			downloadAudio();
-		    			return;
-		    		}
-		    	}
+	// function init() {
+	// 	chrome.tabs.query({'active': true, 'lastFocusedWindow': true}, function (tabs) {
+	// 	    url = tabs[0].url;
+	// 	    var url_parameters = url.split('?');
+	// 	    url = baseurl + '?';
+	// 	    for(var i=1; i < url_parameters.length; i++) {
+	// 	    	url += url_parameters[i];
+	// 	    }
+	// 	    //query my aws lambda function for the 
+	// 	    //source url and video properties
+	// 	    $.get(url, function(data) {
+	// 	    	console.log(data);
+	// 	    	if(data.message == "-1") {
+	// 	    		//error handling
+	// 	    		//$status.find("p").text("Invalid url.");
+	// 	    		return;
+	// 	    	}
+	// 	    	var videos = data.message;
+	// 	    	var type;
+	// 	    	for(var i = 0; i < videos.length; i++) {
+	// 	    		type = videos[i].container;
+	// 	    		if(type == "webm" || type == "mp4") {
+	// 	    			dataUri = "data:" + container[type] + ";base64,";
+	// 	    			source = videos[i].url;
+	// 	    			downloadAudio();
+	// 	    			return;
+	// 	    		}
+	// 	    	}
 
-		    	//if a valid video type could not be found:
-		    	//$status.find("A valid video type could not be found");
-		    });
-		});
-	}	
-	function downloadAudio() {
-		var xhr = new XMLHttpRequest();
-		xhr.open('GET', source, true);
-		xhr.responseType = 'arraybuffer';
-		xhr.onload = function(e) {
-			if(this.status == 200) {
-				dataUri = dataUri + base64ArrayBuffer(xhr.response);
-				loadAudio();
-			}
-		}
-		xhr.send();
-	}
+	// 	    	//if a valid video type could not be found:
+	// 	    	//$status.find("A valid video type could not be found");
+	// 	    });
+	// 	});
+	// }	
+	// function downloadAudio() {
+	// 	var xhr = new XMLHttpRequest();
+	// 	xhr.open('GET', source, true);
+	// 	xhr.responseType = 'arraybuffer';
+	// 	xhr.onload = function(e) {
+	// 		if(this.status == 200) {
+	// 			dataUri = dataUri + base64ArrayBuffer(xhr.response);
+	// 			loadAudio();
+	// 		}
+	// 	}
+	// 	xhr.send();
+	// }
 }
 
 
