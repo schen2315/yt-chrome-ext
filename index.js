@@ -16,9 +16,13 @@ var	url = "",	/* the youtube video */
 	source = "", /* where the video itself is stored */
 	dataUri = "",
 	youtube_url = ""; /* the video */
+
+/* for offline testing */
+var local_mp4 = "afraidofheights.mp4";
+
 $(document).ready(pageLoadComplete);
 function pageLoadComplete() {
-	//console.log(chrome.extension.getBackgroundPage().return_global());
+	/* cache DOM objects */
 	var $status = $("div.status"),
 	$input = $("div.input"),
 	$start = $($input.find("input")[0]),
@@ -26,8 +30,15 @@ function pageLoadComplete() {
 	$rate_input =  $($input.find("input")[2]),
 	$rate_p = $($input.find("p")[2]);
 	$input.hide();
-	// console.log(chrome.extension.getBackgroundPage().init);
-
+	
+	/* initialization */
+	/* 
+		get the current youtube url and send it to background page. 
+		background page will then query lambda endpoint and download
+		the source file. The callback will receive the dataUri. The 
+		howler object is then instantiated
+	*/
+	/*
 	chrome.tabs.query({'active': true, 'lastFocusedWindow': true}, function (tabs) {
 		youtube_url = tabs[0].url;
 		console.log(youtube_url);
@@ -44,33 +55,49 @@ function pageLoadComplete() {
 			loadAudio();
 		});
 	});
+	*/
+	/* for offline testing */
+	loadAudio();
 
-	//loadAudio();
-	//listener methods:
+	/* listener methods: */ 
+
+	//press space to pause and play
 	$(document).keyup(function(e) {
-		//console.log(snippet);
 		if(e.which === 32) {
 			if(sound.playing()) {
 				sound.stop();
 			} else { 
-				if(snippet !== undefined) sound.play('snippet');
+				if(snippet !== undefined)  {
+					console.log(snippet);
+					sound.play('snippet');
+				}
 				else sound.play(); 
 			}
 		}
 	});
+
+	//notify user using status if they are typing
 	$start.keyup(hasTypeCompleted);
 	$stop.keyup(hasTypeCompleted);
+
+
 	$(document).on('input', '#slider', hasTypeCompleted);
 	// $rate.input.on('input', function() {
 	// 	console.log("change");
 	// 	//$rate.p.text("rate: " + $rate.input.val());
 	// });
 
-	/*offset and duration should be in milliseconds*/
-	/*load UI*/
+	/* offset and duration should be in milliseconds */
+	/* load UI */
 	function loadAudio(offset, duration, rate) {
 			//var dataUri = "data:" + mediaTypes[3] + ";base64," + base64ArrayBuffer(xhr.response);
 			//var dataUri = url;
+
+			/* for offline testing */
+			var dataUri = local_mp4;
+			console.log(offset, duration, rate);
+			console.log(NaN == undefined);
+
 			rate = rate !== undefined ? rate : 1.0;
 			if(offset == undefined || duration == undefined) sound = new Howl({src: [dataUri]});
 			else {
@@ -82,9 +109,7 @@ function pageLoadComplete() {
 					}
 				});
 			}
-			//console.log(snippet);
 			sound.once('load', function() {
-				//console.log(sound.duration());
 				duration = sound.duration();
 				sound.rate(rate);
 				$status.find("p").text("finished loading");
@@ -92,9 +117,11 @@ function pageLoadComplete() {
 			});
 			sound.on('stop', function() {
 				$status.find("p").text("reset");
+				//show the current timestamp every millisecond
 			});
 			sound.on('play', function() {
 				$status.find("p").text("playing");
+				//remove the timestamp status
 			});
 	}
 	function destroyAudio() {
@@ -102,26 +129,20 @@ function pageLoadComplete() {
 		$status.find("p").text("no audio loaded");
 	}
 	function setAudio() {
-		// $this = $(this);
-		// //wait for the user to stop typing
-		// //get timestamps in seconds
-		// //if they are false, ignore them
-		// if($this.is($start) || $this.is($stop)) {
-		// 	sound.stop();
-		// 	console.log("start: " 
-		// 		+ readTimeStamp($start.val()) + "\n" 
-		// 		+ "stop: " + readTimeStamp($stop.val()));
-		// }
 		$status.find("p").text("reset");
 		sound.stop();
 		console.log("start: " + $start.val());
 		var start = readTimeStamp($start.val());
 		var stop = readTimeStamp($stop.val());
-		var rate = $rate_input.val();
+		var rate = parseInt($rate_input.val());
 		console.log(start);
 		console.log(stop);
 		console.log("rate: " + rate);
-		if(start != false && stop != false && (rate >= 0.5 && rate <= 1.5)) {
+		if(start !== false && stop !== false && (rate >= 0.5 && rate <= 1.5)) {
+			/* this is due to a currently open bug in howler.js: #627 */
+			/* should remove if issue is resolved */
+			if(start === 0) start = 0.001;
+			console.log("is this being called?");
 			destroyAudio();
 			$status.find("p").text("loading");
 			loadAudio(start*1000, (stop - start)*1000, rate);
