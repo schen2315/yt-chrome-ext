@@ -18,7 +18,7 @@ var	url = "",	/* the youtube video */
 	youtube_url = ""; /* the video */
 
 /* for offline testing */
-var local_mp4 = "afraidofheights.mp4";
+var local_mp4 = "egoist.mp3";
 
 $(document).ready(pageLoadComplete);
 function pageLoadComplete() {
@@ -89,19 +89,25 @@ function pageLoadComplete() {
 
 	/* offset and duration should be in milliseconds */
 	/* load UI */
-	function loadAudio(offset, duration, rate) {
+	function loadAudio(offset, length, rate) {
 			//var dataUri = "data:" + mediaTypes[3] + ";base64," + base64ArrayBuffer(xhr.response);
 			//var dataUri = url;
 
 			/* for offline testing */
 			var dataUri = local_mp4;
-			console.log(offset, duration, rate);
-			console.log(NaN == undefined);
-
+			console.log(offset, length, Number(rate));
+			console.log(offset === NaN);
 			rate = rate !== undefined ? rate : 1.0;
-			if(offset == undefined || duration == undefined) sound = new Howl({src: [dataUri]});
-			else {
-				snippet = [offset, duration];
+			if(offset === undefined || length === undefined) {
+				console.log("is this called?");
+				snippet = undefined;
+				sound = new Howl({src: [dataUri]});
+			} else if(isNaN(offset) || isNaN(length)) {
+				console.log("is this called?");
+				snippet = undefined;
+				sound = new Howl({src: [dataUri]});
+			} else {
+				snippet = [offset, length];
 				sound = new Howl({
 					src: [dataUri],
 					sprite: {
@@ -134,7 +140,7 @@ function pageLoadComplete() {
 		console.log("start: " + $start.val());
 		var start = readTimeStamp($start.val());
 		var stop = readTimeStamp($stop.val());
-		var rate = parseInt($rate_input.val());
+		var rate = $rate_input.val();
 		console.log(start);
 		console.log(stop);
 		console.log("rate: " + rate);
