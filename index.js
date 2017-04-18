@@ -95,8 +95,9 @@ function pageLoadComplete() {
 
 			/* for offline testing */
 			var dataUri = local_mp4;
-			console.log(offset, length, Number(rate));
-			console.log(offset === NaN);
+			var timestampTO;
+			//console.log(offset, length, Number(rate));
+			//console.log(offset === NaN);
 			rate = rate !== undefined ? rate : 1.0;
 			if(offset === undefined || length === undefined) {
 				console.log("is this called?");
@@ -118,15 +119,27 @@ function pageLoadComplete() {
 			sound.once('load', function() {
 				duration = sound.duration();
 				sound.rate(rate);
-				$status.find("p").text("finished loading");
+				$status.find("p").text("press space");
 				$input.show();
 			});
 			sound.on('stop', function() {
-				$status.find("p").text("reset");
+				//console.log('onstop working?');
+				$status.find("p").text("press space");
+				clearInterval(timestampTO);
 				//show the current timestamp every millisecond
 			});
+			sound.on('end', function() {
+				$status.find("p").text("press space");
+				clearInterval(timestampTO);
+			})
 			sound.on('play', function() {
-				$status.find("p").text("playing");
+				//$status.find("p").text("playing");
+				var time_now = 0;
+				$status.find("p").text(time_now);
+				timestampTO = setInterval(function() {
+					time_now += 1000;
+					$status.find("p").text(time_now);
+				}, 1000);
 				//remove the timestamp status
 			});
 	}
@@ -135,23 +148,25 @@ function pageLoadComplete() {
 		$status.find("p").text("no audio loaded");
 	}
 	function setAudio() {
-		$status.find("p").text("reset");
-		sound.stop();
-		console.log("start: " + $start.val());
+		//console.log("start: " + $start.val());
 		var start = readTimeStamp($start.val());
 		var stop = readTimeStamp($stop.val());
 		var rate = $rate_input.val();
 		console.log(start);
 		console.log(stop);
-		console.log("rate: " + rate);
+		//console.log("rate: " + rate);
 		if(start !== false && stop !== false && (rate >= 0.5 && rate <= 1.5)) {
 			/* this is due to a currently open bug in howler.js: #627 */
 			/* should remove if issue is resolved */
 			if(start === 0) start = 0.001;
-			console.log("is this being called?");
+			if(stop <= start) return;
+			sound.stop();
 			destroyAudio();
 			$status.find("p").text("loading");
 			loadAudio(start*1000, (stop - start)*1000, rate);
+		} else {
+			console.log('what')
+			$status.find("p").text("invalid interval");
 		}
 	}
 	//convert a standard video timestamp (ex: 1:40) to sec (100 sec)
@@ -167,9 +182,18 @@ function pageLoadComplete() {
 			total_seconds += parseInt(split[i])*unit;
 			unit *= 60;
 		}
-		console.log(str);
+		//console.log(str);
 		console.log("total seconds: " + total_seconds);
+		console.log(duration);
+		if(total_seconds < 0 || total_seconds > duration) {
+			console.log("invalid timestamp")
+			return false;
+		}
 		return total_seconds;
+	}
+	function millToTimeStamp(num) {
+		var sec = Math.floor(num / 1000);
+		/* complete this to put into sound.onplay */
 	}
 	function readRate(str) {
 		var rate = parseInt(str);
