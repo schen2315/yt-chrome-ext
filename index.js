@@ -1,3 +1,5 @@
+'use strict';
+
 var baseurl = "https://ixwyi5tpad.execute-api.us-east-1.amazonaws.com/dev";
 var mediaTypes = ["audio/webm", "audio/ogg", "audio/x-ogg", "audio/mp4", "audio/m4a", "audio/mp3", "audio/mpeg", "audio/wav", "audio/x-wav", "audio/flac", "audio/x-flac"];
 var container = {
@@ -38,7 +40,7 @@ function pageLoadComplete() {
 		the source file. The callback will receive the dataUri. The 
 		howler object is then instantiated
 	*/
-	/*
+	
 	chrome.tabs.query({'active': true, 'lastFocusedWindow': true}, function (tabs) {
 		youtube_url = tabs[0].url;
 		console.log(youtube_url);
@@ -55,9 +57,9 @@ function pageLoadComplete() {
 			loadAudio();
 		});
 	});
-	*/
+	
 	/* for offline testing */
-	loadAudio();
+	//loadAudio();
 
 	/* listener methods: */ 
 
@@ -94,7 +96,7 @@ function pageLoadComplete() {
 			//var dataUri = url;
 
 			/* for offline testing */
-			var dataUri = local_mp4;
+			// var dataUri = local_mp4;
 			var timestampTO;
 			//console.log(offset, length, Number(rate));
 			//console.log(offset === NaN);
@@ -134,12 +136,12 @@ function pageLoadComplete() {
 			})
 			sound.on('play', function() {
 				//$status.find("p").text("playing");
-				var time_now = 0;
-				$status.find("p").text(time_now);
+				var time_now = isNaN(offset) ? 0 : offset;
+				$status.find("p").text(millToTimeStamp(time_now));
 				timestampTO = setInterval(function() {
 					time_now += 1000;
-					$status.find("p").text(time_now);
-				}, 1000);
+					$status.find("p").text(millToTimeStamp(time_now));
+				}, 1000/rate);
 				//remove the timestamp status
 			});
 	}
@@ -159,7 +161,10 @@ function pageLoadComplete() {
 			/* this is due to a currently open bug in howler.js: #627 */
 			/* should remove if issue is resolved */
 			if(start === 0) start = 0.001;
-			if(stop <= start) return;
+			if(stop <= start) {
+				$status.find("p").text("invalid interval");
+				return;
+			}
 			sound.stop();
 			destroyAudio();
 			$status.find("p").text("loading");
@@ -192,8 +197,11 @@ function pageLoadComplete() {
 		return total_seconds;
 	}
 	function millToTimeStamp(num) {
-		var sec = Math.floor(num / 1000);
-		/* complete this to put into sound.onplay */
+		var tot_sec = Math.floor(num / 1000);
+		var min = Math.floor(tot_sec / 60);
+		var sec = tot_sec - (60*min);
+		if(sec < 10) sec = "0" + sec.toString();
+		return min.toString() + ":" + sec;
 	}
 	function readRate(str) {
 		var rate = parseInt(str);

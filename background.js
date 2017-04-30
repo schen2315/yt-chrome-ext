@@ -1,3 +1,5 @@
+'use strict';
+
 var baseurl = "https://ixwyi5tpad.execute-api.us-east-1.amazonaws.com/dev";
 var mediaTypes = ["audio/webm", "audio/ogg", "audio/x-ogg", "audio/mp4", "audio/m4a", "audio/mp3", "audio/mpeg", "audio/wav", "audio/x-wav", "audio/flac", "audio/x-flac"];
 var container = {
